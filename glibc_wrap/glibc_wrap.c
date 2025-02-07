@@ -13,7 +13,7 @@
 
 #ifndef __arm__
 // Use GLIBC 2.2.5 versioning only if not on ARM
-asm(".symver log2_glibc_225, log2@GLIBC_2.2.5");
+__asm__(".symver log2_glibc_225, log2@GLIBC_2.2.5");
 extern double log2_glibc_225(double num);
 #endif
 

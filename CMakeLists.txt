@@ -6,6 +6,8 @@ cmake_minimum_required(VERSION 3.10)
 project(fpga-runtime-for-opencl C CXX)
 
 # Set default C++ standard property of targets.
+set(CMAKE_C_STANDARD 99)
+set(CMAKE_C_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
@@ -13,8 +15,8 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 # https://cmake.org/cmake/help/v3.10/module/CPack.html
 set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "Intel(R) FPGA Runtime for OpenCL(TM) Software Technology")
 set(CPACK_PACKAGE_VENDOR "Intel Corporation")
-set(CPACK_PACKAGE_VERSION_MAJOR "2022")
-set(CPACK_PACKAGE_VERSION_MINOR "1")
+set(CPACK_PACKAGE_VERSION_MAJOR "2025")
+set(CPACK_PACKAGE_VERSION_MINOR "0")
 set(CPACK_PACKAGE_VERSION_PATCH "0")
 set(CPACK_PACKAGE_DESCRIPTION_FILE "${CMAKE_CURRENT_SOURCE_DIR}/README.md")
 set(CPACK_RESOURCE_FILE_LICENSE "${CMAKE_CURRENT_SOURCE_DIR}/LICENSE")
@@ -33,7 +35,7 @@ endif()
 
 # We exclusively support Ninja as the generator used to build the project.
 if(NOT CMAKE_GENERATOR STREQUAL "Ninja")
-  message(FATAL_ERROR "unsupported cmake generator, use `cmake -G Ninja` instead")
+  message(STATUS "unsupported cmake generator, use `cmake -G Ninja` instead")
 endif()
 
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake/modules")
@@ -133,6 +135,8 @@ if(CMAKE_CXX_COMPILER_ID MATCHES "^(Clang|GNU)$")
     -fstack-protector
     # Enable fortified wrappers of GNU C library functions.
     -D_FORTIFY_SOURCE=2
+    # Build with -O2 in Release mode.
+    $<$<CONFIG:Release>:-O2>
     # Optimize debugging experience, required for _FORTIFY_SOURCE.
     # https://gcc.gnu.org/onlinedocs/gcc/Optimize-Options.html#index-Og
     $<$<CONFIG:Debug>:-Og>
@@ -306,7 +310,8 @@ set_target_properties(acl_objs PROPERTIES
   POSITION_INDEPENDENT_CODE ON
   )
 target_compile_features(acl_objs PRIVATE cxx_std_11)
-# These compile_definitions need to be public, since we're building an OBJECT library (?)
+# These compile_definitions need to be public, since we're building an OBJECT
+# library (?)
 target_compile_definitions(acl_objs PUBLIC
   # Revert to old pre-C++11 ABI for std::string and std::list in libstdc++.
   # This is needed for ABI compatibility with the Intel® FPGA Add-On for
@@ -327,9 +332,11 @@ target_include_directories(acl_objs PRIVATE
   "${CMAKE_BINARY_DIR}/include"
   src
   )
-# "Linking" libraries to an OBJECT library is the preferred approach, but it is supported only after CMake 3.12
+# "Linking" libraries to an OBJECT library is the preferred approach, but it is
+# supported only after CMake 3.12
 # The oldest CMake version we need to support is 3.10
-# As older OS support becomes deprecated and we don't need to worry about CMake < 3.12, we can change this
+# As older OS support becomes deprecated and we don't need to worry about CMake
+# < 3.12, we can change this
 # See: https://cmake.org/cmake/help/v3.12/command/target_link_libraries.html#linking-object-libraries
 target_include_directories(acl_objs PRIVATE
   "${CMAKE_SOURCE_DIR}/lib/acl_check_sys_cmd/include"
